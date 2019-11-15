@@ -107,9 +107,9 @@ int main(int argc, char *argv[])
     // data_ghost
     // int MPI_Type_vector(int count, int blocklength, int stride, MPI_Datatype old_type, MPI_Datatype *newtype_p);
     MPI_Type_vector(SUBDOMAIN, 1, 0, MPI_DOUBLE, &data_ghost);
+    MPI_Type_commit(&data_ghost);
     //MPI_Type_vector(1, SUBDOMAIN, 0, MPI_DOUBLE, &data_ghost); 
     //TODO: DEU MUITO ERRADO ASSIM, PQ
-    MPI_Type_commit(&data_ghost);
 
     //  TODO: ghost cell exchange with the neighbouring cells in all directions
     //  use MPI_Irecv(), MPI_Send(), MPI_Wait() or other viable alternatives

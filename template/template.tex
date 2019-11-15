@@ -3,13 +3,16 @@
 \usepackage{assignment}
 \usepackage{textcomp}
 \usepackage{amssymb}
+\usepackage{float}
 
 \begin{document}
+
+\graphicspath{{./img/}}
 
 \setassignment
 \setduedate{29 November 2019, 23:55}
 
-\serieheader{High Performance Computing}{2019}{Student: FULL NAME}{Discussed with: FULL NAME}{Solution for Assignment 5}{}
+\serieheader{High Performance Computing}{2019}{Student: Gabriel Fernandes de Oliveira}{Discussed with: N/A}{Solution for Assignment 5}{}
 \newline
 
 \section*{Parallel Programming with MPI }
@@ -17,6 +20,83 @@ This assignment will introduce you to parallel programming using MPI. You will i
 
 
 \section{Exchange of the ghost cells \punkte{40}}
+
+\begin{itemize}
+
+    \item The cartesian 2D communicator was created with periodic boundaries as such:
+        \begin{figure}[H]
+            \includegraphics[width=\linewidth]{cart}
+            \caption{Creation of the cartesian communicator}
+        \end{figure}
+
+    \item Follows now the declaration of the \textit{ghost\_data} type:
+        \begin{figure}[H]
+            \includegraphics[width=\linewidth]{"createdata"}
+            \caption{Creation of the \textit{ghost\_data}}
+        \end{figure}
+
+        To create this type, which is basically a vector of doubles, I opted to use \textit{SUBDOMAIN} blocks of $1$ element each, and $0$ stride between blocks.
+
+    \item To make the exchange of ghost cells I use the non blocking functions \textit{MPI\_Isend} and \textit{MPI\_Ircv}.
+
+        Hence, the exchange of ghost cells is separated in two parts.
+        On the first part all the non-blocking functions for exchanging ghost cells are used, such as shown in figure \ref{bottom_send}.
+
+        \begin{figure}
+            \includegraphics[width=\linewidth]{send_rcv_bottom}
+            \caption{Exchanging the information of the bottom row of ghost cells}.
+            \label{bottom_send}
+        \end{figure}
+
+        On the first lines of \ref{bottom_send}, one can see the send buffer (\textit{snd\_bottom}) being filled with the bottom row of elements from the data matrix.
+        Right after that follows the non blocking operations for receiving the ghost cells from the bottom process, and for sending the ghost cells to de bottom process, repectivelly.
+
+        The tags on the requests are defined as follows:
+
+        Sending data to the top process has the tag "T", which has value 0 (as seen in \ref{tags}), sending to the bottom process has tag "B", which has value 1, sending to the left has tag "L" or 2, and sending to the right has tag "R" or 3.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.2\linewidth]{tags}
+    \caption{Tags defined for the communications}
+    \label{tags}
+\end{figure}
+
+    The tags for the receiving operations should be exactly the opposite, for that reason I created a function called \textit{tag\_from}, as seen in figure \ref{tag_from}.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.4\linewidth]{tag_from}
+    \caption{Function that returns the tag for "receiving" operations}
+    \label{tag_from}
+\end{figure}
+
+By returning the value XOR 1, the function \textit{tag\_from} always returns the value of the opposite action sent as parameter.
+For instance \textit{tag\_from(T)} returns 1, value defined as "B", and vice-versa. Likewise, \textit{tag\_from(L)} is 3, value defined as "R".
+
+For that reason, receiving a value from the bottom process has tag "T", or simply, \textit{tag\_from(B)}.
+
+Finally, after all the data exchange calls, for all directions, comes the section of the code that has the \textit{MPI\_Wait} clauses.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\linewidth]{wait_bottom}
+    \caption{Wait functions for the bottom direction}
+\end{figure}
+
+Since all the exchange functions are non blocking and have already been made before the first Wait clause, there is no possibility for a deadlock.
+
+After the Wait clauses, the only thing left to be done is copying the received ghost cells to the data array.
+
+Follows the data printed by process 9 after the completion of the program:
+
+\begin{figure}[H]
+    \includegraphics[width=\linewidth]{result}
+    \caption{Result after finishing the implementation}
+\end{figure}
+
+Through this image one can see that the exchange of information was done correctly.
+
+\end{itemize}
 
 \section{Parallelizing the Mandelbrot Set with MPI \punkte{60}}
 

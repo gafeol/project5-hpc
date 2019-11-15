@@ -45,16 +45,24 @@ Partition createPartition(int mpi_rank, int mpi_size)
     Partition p;
 
     // TODO: determine size of the grid of MPI processes (p.nx, p.ny), see MPI_Dims_create()
+    // int MPI_Dims_create(int nnodes,int ndims,int *dims);
+    // TODO: NAO SEI COMO FAZER O CREATE NA PARTICAO
+    int dims[2], periods[2];
+    dims[0] = dims[1] = 1;
+    periods[0] = periods[1] = 0;
     p.ny = 1;
     p.nx = 1;
 
     // TODO: Create cartesian communicator (p.comm), we do not allow the reordering of ranks here, see MPI_Cart_create()
     MPI_Comm comm_cart = MPI_COMM_WORLD;
+    MPI_Cart_create(comm_cart, 2, dims, periods, 0, &comm_cart);
     p.comm = comm_cart;
     
     // TODO: Determine the coordinates in the Cartesian grid (p.x, p.y), see MPI_Cart_coords()
-    p.y = 0;
-    p.x = 0;
+    int coord[2];
+    MPI_Cart_coords(comm_cart, mpi_rank, 2, coord);
+    p.y = coord[0];
+    p.x = coord[1];
 
     return p;
 }
